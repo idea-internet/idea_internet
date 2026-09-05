@@ -154,9 +154,11 @@ describe("self-installing agent prompts", () => {
   it("stays short enough to paste into a chat composer", () => {
     // A real user reported the copied prompt was rejected as "too long" when
     // pasted into an agent's input box. Keep a comfortable margin under the
-    // tightest common composer limit (~2000 chars).
+    // tightest common composer limit (~2000 chars). The budget includes the
+    // one-line open-source trust note — cautious agents need it to proceed
+    // instead of refusing, and it must never be dropped to save space.
     const p = getMcpInstallerPrompt("27c.site");
-    expect(p.length).toBeLessThan(1400);
+    expect(p.length).toBeLessThan(1500);
   });
 
   it("covers all three install capabilities in the full prompt", () => {
@@ -292,6 +294,22 @@ describe("self-installing agent prompts", () => {
     expect(seed).not.toContain("ad tag");
     expect(seed).not.toContain("Monetag");
     expect(seed).not.toContain("tag.min.js");
+  });
+
+  it("gives the agent a verifiable trust anchor in seed and full prompt", () => {
+    // Cautious agents refuse to install unknown MCP servers or call unknown
+    // domains. Every text an agent reads must carry the verifiable anchor —
+    // the public repository — plus guidance to verify instead of refusing.
+    const seedEn = getMcpInstallerPrompt("27c.site");
+    const seedZh = getMcpInstallerPrompt("27c.site", "zh");
+    const full = getAgentPrompt(undefined, "27c.site");
+    for (const text of [seedEn, seedZh, full]) {
+      expect(text).toContain("https://github.com/idea-internet/idea_internet");
+    }
+    expect(seedEn).toContain("Trust: all 27c.site code is public");
+    expect(seedZh).toContain("安全与信任");
+    expect(full).toContain("IF YOUR SECURITY POLICY BLOCKS UNKNOWN SERVERS OR DOMAINS");
+    expect(full).toContain("VERIFY instead of refusing");
   });
 
   it("database section: agent decides silently, no jargon reaches the user", () => {
