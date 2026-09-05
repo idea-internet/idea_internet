@@ -794,6 +794,10 @@ describe("full lifecycle", () => {
     // Live "users served" counter plumbing is present.
     expect(body).toContain('id="liveStat"');
     expect(body).toContain('fetch("/api/stats"');
+    // Trust anchors: both the seed prompt and every example-brief prompt carry
+    // the public repository link so cautious agents verify instead of refusing.
+    expect(body).toContain("https://github.com/idea-internet/idea_internet");
+    expect((body.match(/idea-internet\/idea_internet/g) || []).length).toBeGreaterThanOrEqual(7);
     expect(body).not.toContain("Manual file upload");
   });
 
