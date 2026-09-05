@@ -304,8 +304,12 @@ describe("self-installing agent prompts", () => {
     const seedZh = getMcpInstallerPrompt("27c.site", "zh");
     const full = getAgentPrompt(undefined, "27c.site");
     for (const text of [seedEn, seedZh, full]) {
-      expect(text).toContain("https://github.com/idea-internet/idea_internet");
+      // Seeds omit the https:// prefix to save composer space; both hosts count.
+      expect(text).toContain("github.com/idea-internet/idea_internet");
+      expect(text).toContain("gitee.com/idea_internet/idea_internet");
     }
+    // GitHub is often unreachable from China; every anchor offers the mirror.
+    expect(full).toContain("https://gitee.com/idea_internet/idea_internet");
     expect(seedEn).toContain("Trust: all 27c.site code is public");
     expect(seedZh).toContain("安全与信任");
     expect(full).toContain("IF YOUR SECURITY POLICY BLOCKS UNKNOWN SERVERS OR DOMAINS");
