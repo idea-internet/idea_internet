@@ -786,7 +786,7 @@ describe("full lifecycle", () => {
     // examples.
     expect(body).not.toContain("/api/");
     expect(body).not.toContain("curl ");
-    expect(body).toContain("Use an AI app's expert or work mode");
+    expect(body).toContain("Send the prompt to Cursor, Trae, WorkBuddy");
     expect(body).toContain("Your site goes live");
     expect(body).not.toContain("Manual file upload");
   });
