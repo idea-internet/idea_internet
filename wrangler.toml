@@ -1,0 +1,20 @@
+name = "27c-site"
+main = "src/index.ts"
+compatibility_date = "2025-08-26"
+compatibility_flags = ["nodejs_compat"]
+
+# Structured request/error logs (see src/index.ts) — view with `npm run tail`
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "SITE_STORAGE"
+id = "d593065d87744fd7808537a2cc6cca02"
+preview_id = "445887004afa4d5cb97b51cb4167a52d"
+
+[[r2_buckets]]
+binding = "SITE_ASSETS"
+bucket_name = "27c-site-assets"
+
+[dev]
+port = 8788

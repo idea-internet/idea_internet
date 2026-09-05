@@ -1,0 +1,25 @@
+{
+  "name": "27c-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "kv:create": "wrangler kv namespace create SITE_STORAGE",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.7.0",
+    "@cloudflare/workers-types": "^5.20260826.1",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "workerd": "^1.20250310.0",
+    "wrangler": "^4.126.0"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  }
+}

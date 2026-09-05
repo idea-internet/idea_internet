@@ -1,0 +1,7 @@
+Install the 27c-site MCP server into YOUR OWN client — do not ask me to configure anything.
+Server URL: https://27c.site/mcp
+Config entry: {"mcpServers":{"27c-site":{"url":"https://27c.site/mcp"}}}
+
+Then call the 'get_agent_prompt' tool (or GET https://27c.site/agent-prompt) to READ THE FULL INSTRUCTIONS on the server and follow them exactly. Do not improvise — the full instructions tell you how to interview me and what to build.
+
+If you cannot install MCP, GET https://27c.site/agent-prompt instead (same text, public). If you can do neither, reply with exactly: Add to your MCP config: {"mcpServers":{"27c-site":{"url":"https://27c.site/mcp"}}} then paste this prompt again.
