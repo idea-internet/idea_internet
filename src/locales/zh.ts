@@ -38,6 +38,9 @@ export const zh: Dict = {
     lead: "个人主页、项目介绍、作品集、小店、社群，甚至只是一个属于自己的角落——不用先和服务器搏斗。先从简单开始，想怎么发展都由你决定。",
     ctaPrimary: "创建我的网站",
     ctaSecondary: "看看它为什么好用",
+    stats: {
+      template: "已服务 {n} 位用户，持续增加",
+    },
     flow: {
       ariaLabel: "从想法到上线的三个步骤",
       steps: [

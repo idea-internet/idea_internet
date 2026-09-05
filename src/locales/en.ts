@@ -38,6 +38,9 @@ export const en = {
     lead: "A portfolio, a project page, a tiny shop, a club, a personal corner — publish it without wrestling with servers. Start small, make it yours, and grow when you are ready.",
     ctaPrimary: "Create my site",
     ctaSecondary: "See why it works",
+    stats: {
+      template: "{n} users served — and counting",
+    },
     flow: {
       ariaLabel: "Three steps from idea to live website",
       steps: [

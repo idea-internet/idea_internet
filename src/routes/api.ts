@@ -46,6 +46,37 @@ function retryAfterHeaders(resetAt: number): Record<string, string> {
   return { "Retry-After": String(seconds) };
 }
 
+// --- Live platform statistics ------------------------------------------------
+// The "users served" figure is a REAL count over the KV account index
+// (`user:id:<id>` keys), not a stored counter — so it self-heals: both
+// registrations and account deletions are reflected, and there is no drift
+// even if the counter approach had been interrupted at some point. KV list is
+// paged and slightly expensive, so a short per-isolate cache (30s) keeps
+// homepage bursts from re-counting on every hit; the number is therefore
+// live within ~30 seconds, which is well inside KV's eventual consistency.
+let statsCache: { at: number; users: number } | null = null;
+
+// Tests run several requests against one module instance, which outlives the
+// per-test KV mock; the 30s cache would otherwise leak counts between tests.
+export function __resetStatsCacheForTests(): void {
+  statsCache = null;
+}
+
+async function countKvKeys(env: Env, prefix: string): Promise<number> {
+  let count = 0;
+  let cursor: string | undefined;
+  for (;;) {
+    const page = await env.SITE_STORAGE.list({ prefix, cursor, limit: 1000 });
+    count += page.keys.length;
+    // Real KVNamespace reports list_complete; the test mock just omits the
+    // cursor when a page is the last one. Both signals end the loop.
+    const next = page.list_complete ? undefined : (page as { cursor?: string }).cursor;
+    if (!next) break;
+    cursor = next;
+  }
+  return count;
+}
+
 async function handleRegister(env: Env, body: Record<string, unknown>): Promise<Response> {
   const username = typeof body.username === "string" ? body.username.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
@@ -667,6 +698,18 @@ export async function handleApiRequest(env: Env, request: Request): Promise<Resp
   const path = url.pathname;
   if (path === "/api/health" && request.method === "GET") {
     return jsonResponse({ success: true, data: { status: "ok", time: new Date().toISOString() } });
+  }
+  // Public live platform stats for the homepage counter — no auth, same
+  // bracket as /api/health. See the statsCache note above for why it is real.
+  if (path === "/api/stats" && request.method === "GET") {
+    const now = Date.now();
+    if (!statsCache || now - statsCache.at > 30_000) {
+      const users = await countKvKeys(env, "user:id:");
+      statsCache = { at: now, users };
+    }
+    return jsonResponse({ success: true, data: { users: statsCache.users } }, 200, {
+      "Cache-Control": "public, max-age=30",
+    });
   }
   // Public data API for deployed sites — MUST stay before the Bearer-auth
   // check below: visitors' browsers have no API key by design.

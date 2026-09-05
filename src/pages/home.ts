@@ -195,6 +195,28 @@ export function renderHome(d: Dict): string {
       margin-bottom: 2rem;
     }
     .cta-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .live-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    .live-stat strong { color: var(--accent); font-variant-numeric: tabular-nums; }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: livePulse 2s infinite;
+      flex: none;
+    }
+    @keyframes livePulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
     .badge {
       display: inline-block;
       background: transparent;
@@ -466,6 +488,10 @@ export function renderHome(d: Dict): string {
           <a href="#mcp" class="btn btn-primary">${d.home.ctaPrimary}</a>
           <a href="#compare" class="btn btn-secondary">${d.home.ctaSecondary}</a>
         </div>
+        <p class="live-stat" id="liveStat" hidden>
+          <span class="live-dot" aria-hidden="true"></span>
+          <span id="liveStatText"></span>
+        </p>
       </div>
       <div class="hero-visual">
         <div class="flow-animation" aria-label="${d.home.flow.ariaLabel}">
@@ -535,9 +561,32 @@ export function renderHome(d: Dict): string {
         copied: d.home.mcp.copied,
         copyStarterBtn: d.home.mcp.copyStarterBtn,
         exampleCopy: d.home.examples.copy,
+        statsTemplate: d.home.stats.template,
+        lang: d.lang,
       })};
       var origin = "https://27c.site";
       try { if (location.origin) origin = location.origin; } catch (e) {}
+
+      // Live "users served" counter — real data from the platform API, the
+      // same number /api/stats returns to anyone. Fetched on load and every
+      // 30s; stays hidden if the fetch ever fails, never fakes a number.
+      var statEl = document.getElementById("liveStat");
+      var statText = document.getElementById("liveStatText");
+      function loadStats() {
+        fetch("/api/stats", { cache: "no-store" })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            if (!j || !j.success || typeof j.data.users !== "number" || !statText) return;
+            var n = j.data.users.toLocaleString(d.lang === "zh" ? "zh-CN" : "en-US");
+            statText.textContent = d.statsTemplate.replace("{n}", n);
+            if (statEl) statEl.hidden = false;
+          })
+          .catch(function () {});
+      }
+      if (statEl && statText) {
+        loadStats();
+        setInterval(loadStats, 30000);
+      }
 
       function flash(btn, original) {
         btn.textContent = d.copied;

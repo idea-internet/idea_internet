@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MockKV, MockR2 } from "./test/mocks";
 import worker from "./index";
+import { __resetStatsCacheForTests } from "./routes/api";
 import { Env } from "./types";
 
 // The worker's fetch handler only touches Env bindings, so we exercise the
@@ -782,13 +783,47 @@ describe("full lifecycle", () => {
     expect(body).toContain('property="og:title"');
     expect(body).toContain('name="description"');
     // The homepage must not expose raw REST/API usage. It intentionally carries
-    // the self-install prompt, but no /api/ paths and no hand-written curl
-    // examples.
-    expect(body).not.toContain("/api/");
+    // the self-install prompt and the live /api/stats counter, but no other
+    // /api/ paths and no hand-written curl examples.
+    expect(body).not.toContain("/api/deploy");
+    expect(body).not.toContain("/api/register");
+    expect(body).not.toContain("/api/login");
     expect(body).not.toContain("curl ");
     expect(body).toContain("Send the prompt to Cursor, Trae, WorkBuddy");
     expect(body).toContain("Your site goes live");
+    // Live "users served" counter plumbing is present.
+    expect(body).toContain('id="liveStat"');
+    expect(body).toContain('fetch("/api/stats"');
     expect(body).not.toContain("Manual file upload");
+  });
+
+  it("reports real cumulative user stats on the public /api/stats endpoint", async () => {
+    __resetStatsCacheForTests();
+    const res = await fetchApi("/api/stats");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Cache-Control")).toContain("max-age=30");
+    let json = (await res.json()) as { success: boolean; data: { users: number } };
+    expect(json.success).toBe(true);
+    // Fresh per-test KV: no accounts exist yet, and the count is a live
+    // enumeration of the account index, so it starts at exactly zero.
+    expect(json.data.users).toBe(0);
+
+    // Two registrations → exactly two users. No drift, no estimating.
+    const key1 = await registerUser("statsuser1", "statssite1");
+    await registerUser("statsuser2", "statssite2");
+    __resetStatsCacheForTests();
+    json = (await (await fetchApi("/api/stats")).json()) as typeof json;
+    expect(json.data.users).toBe(2);
+
+    // Deleting an account lowers the count too — it is the real index.
+    await fetchApi("/api/account", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${key1}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: true }),
+    });
+    __resetStatsCacheForTests();
+    json = (await (await fetchApi("/api/stats")).json()) as typeof json;
+    expect(json.data.users).toBe(1);
   });
 
   it("serves the public design skill at /skill", async () => {
