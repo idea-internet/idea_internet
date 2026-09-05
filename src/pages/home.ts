@@ -514,7 +514,7 @@ export function renderHome(d: Dict): string {
       <div style="overflow-x: auto;">
         <table class="compare">
           <thead>
-            <tr><th></th><th>27c.site</th><th>${d.home.compare.cols[2]}</th><th>${d.home.compare.cols[3]}</th></tr>
+            <tr><th>${d.home.compare.cols[0]}</th><th>${d.home.compare.cols[1]}</th><th>${d.home.compare.cols[2]}</th><th>${d.home.compare.cols[3]}</th></tr>
           </thead>
           <tbody>
             ${compareRows}
