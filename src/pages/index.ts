@@ -7,8 +7,8 @@ import { renderPlatformNotFound } from "./notFound";
 import { OG_IMAGE_BYTES } from "./og-image";
 
 const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#10b981"/>
-  <path d="M32 15 L46 33 H37 V47 H27 V33 H18 Z" fill="#0a0a0b"/>
+  <rect width="64" height="64" rx="15" fill="#c4512d"/>
+  <text x="32" y="43" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" letter-spacing="-2" fill="#fffdf8">27c</text>
 </svg>`;
 
 export function serveFavicon(): Response {
