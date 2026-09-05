@@ -41,6 +41,10 @@ export const zh: Dict = {
     stats: {
       template: "已服务 {n} 位用户，持续增加",
     },
+    github: {
+      label: "GitHub 开源 · 安全透明",
+      tooltip: "平台全部代码在这个公开仓库里，任何人都可以审查它如何处理你的文件与数据。",
+    },
     flow: {
       ariaLabel: "从想法到上线的三个步骤",
       steps: [

@@ -41,6 +41,10 @@ export const en = {
     stats: {
       template: "{n} users served — and counting",
     },
+    github: {
+      label: "Open source on GitHub",
+      tooltip: "The entire platform runs from this public repository — anyone can review how it handles your files and data.",
+    },
     flow: {
       ariaLabel: "Three steps from idea to live website",
       steps: [
