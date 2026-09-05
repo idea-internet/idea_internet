@@ -2,7 +2,7 @@
 
 [中文说明](README.zh-CN.md)
 
-27c.site is an AI-first website publishing platform built on Cloudflare Workers. An AI that can run commands can install or connect to the 27c.site MCP server, write the website, generate assets, and publish it. If MCP is not available, the same agent can use the HTTP API fallback.
+27c.site is an AI-first website publishing platform built on Cloudflare Workers. You can send the prompt to Cursor, Trae, WorkBuddy, or another AI tool that can run commands; it can connect to the 27c.site MCP server, write the website, generate assets, and publish it. If MCP is not available, the same agent can use the HTTP API fallback.
 
 The platform serves user sites at `<subdomain>.27c.site` or `<subdomain>.27ai.cloud`, with deployment history, rollback, built-in data storage, and no manual management dashboard.
 

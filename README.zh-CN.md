@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-27c.site 是一个基于 Cloudflare Workers 的 AI 优先建站与发布平台。只要 AI 软件能够运行命令，就可以安装或连接 27c.site MCP 服务，编写网站、生成素材并完成发布。如果客户端不支持 MCP，也可以使用 HTTP API 备用方式。
+27c.site 是一个基于 Cloudflare Workers 的 AI 优先建站与发布平台。你可以把提示词发给 Cursor、Trae、WorkBuddy 等能够运行命令的 AI 工具，让它连接 27c.site MCP 服务，编写网站、生成素材并完成发布。如果客户端不支持 MCP，也可以使用 HTTP API 备用方式。
 
 平台会为用户网站提供 `<subdomain>.27c.site` 或 `<subdomain>.27ai.cloud` 地址，并支持部署历史、版本回滚和内置数据存储，不需要手动维护后台。
 

@@ -41,7 +41,7 @@ export const en = {
     flow: {
       ariaLabel: "Three steps from idea to live website",
       steps: [
-        { title: "Describe what you want", desc: "Use an AI app's expert or work mode" },
+        { title: "Describe what you want", desc: "Send the prompt to Cursor, Trae, WorkBuddy, or another AI tool" },
         { title: "Your AI builds it", desc: "Pages, images, and interactions" },
         { title: "Your site goes live", desc: "Get a link and share it" },
       ],
@@ -49,16 +49,16 @@ export const en = {
     mcp: {
       badge: "Start in a minute",
       title: "Tell us what you want to make",
-      desc: "Send the prompt to any AI app with command access, or directly to the AI inside a coding tool. In expert or work mode, it can install MCP, write the code, create images, and publish your site.",
+      desc: "Send the prompt to Cursor, Trae, WorkBuddy, or any other AI app with command access. In expert or work mode, it can connect, install MCP, write the code, create images, and publish your site.",
       boxTitle: "The easy way to begin",
-      boxDesc: "Send this mixed-language prompt to any AI with command access — either a standalone AI app or the AI inside a coding tool. Expert or work mode can install MCP, write the code, and publish in one go; if MCP is unavailable, the AI can use the HTTP API fallback. Basic quick chat usually cannot complete this workflow.",
+      boxDesc: "Send this mixed-language prompt to Cursor, Trae, WorkBuddy, or any other AI with command access. Expert or work mode can connect, install MCP, write the code, and publish in one go; if MCP is unavailable, the AI can use the HTTP API fallback. Basic quick chat usually cannot complete this workflow.",
       copyStarterBtn: "Copy the starter message",
       copied: "Copied!",
     },
     examples: {
       badge: "Start with an example",
       title: "Give your AI a finished brief",
-      lead: "Copy a ready-made website brief to the AI app or coding tool you already use. These examples include the site's purpose and content, so the AI skips that one question and asks only for your account and publishing details.",
+      lead: "Copy a ready-made website brief to Cursor, Trae, WorkBuddy, or another AI app or coding tool you already use. These examples include the site's purpose and content, so the AI skips that one question and asks only for your account and publishing details.",
       copy: "Copy brief",
       copied: "Copied!",
       items: [
@@ -100,11 +100,11 @@ export const en = {
       ogDescription: "Deploy a static site in one prompt. Full API reference, limits, and rollback.",
     },
     h1: "Docs & Quick Start",
-    lead: "Two ways to deploy: with an AI agent (recommended — zero setup), or with the REST API for CI/CD and scripts.",
+    lead: "Send the prompt to Cursor, Trae, WorkBuddy, or another AI tool with command access (recommended — zero setup), or use the REST API for CI/CD and scripts.",
     opt1: {
       title: "Option 1 — Deploy with an AI agent (MCP)",
       desc1: "Install",
-      desc2: "as an MCP server — your agent does that itself. Copy the one prompt from the home page and hand it over: it installs 27c-site into its own client and then uses the ready-made tools (register, deploy, rollback, …) to create the account, authenticate and deploy. You never touch an API key or a config file.",
+      desc2: "as an MCP server — your agent does that itself. Copy the one prompt from the home page and send it to Cursor, Trae, WorkBuddy, or another command-capable AI tool: it connects 27c.site to its own client and then uses the ready-made tools (register, deploy, rollback, …) to create the account, authenticate and deploy. You never touch an API key or a config file.",
       promptTitle: "Ready-to-use prompt",
       promptIntro: "Copy this and give it to your agent — it installs the MCP server itself, then runs the task:",
       prompt: "\"Create a 27c.site account and deploy my static site. Use the 27c-site MCP tools (register, deploy, rollback, get_skill). Deploy index.html plus any assets (use upload for large binaries). If the site needs to save anything — forms, comments, counters — enable the built-in storage. Show me the live URL when done.\"",
