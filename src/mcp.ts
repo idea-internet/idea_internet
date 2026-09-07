@@ -102,6 +102,7 @@ const TOOLS: { name: string; description: string; inputSchema: any }[] = [
         username: { type: "string", description: "3-32 chars, lowercase letters, numbers and underscores only (^[a-z0-9_]+$)." },
         password: { type: "string", description: "At least 6 characters." },
         subdomain: { type: "string", description: "Optional custom subdomain (defaults to username). 1-63 lowercase letters, numbers, hyphens." },
+        domain: { type: "string", description: "Optional platform domain chosen by the user (one of 27c.site, 27ai.cloud, 27c-site.ccwu.cc, idea-27c.ccwu.cc, prourl.ccwu.cc). Defaults to the domain this MCP server was reached through.", enum: ["27c.site", "27ai.cloud", "27c-site.ccwu.cc", "idea-27c.ccwu.cc", "prourl.ccwu.cc"] },
       },
       required: ["username", "password"],
     },
@@ -320,9 +321,15 @@ async function callTool(
   switch (name) {
     case "register": {
       const r = await callApi(env, "POST", "/api/register", {
-        // The account lives on the platform domain this MCP server was reached
-        // through — every domain is a full, equal platform.
-        body: { username: args.username, password: args.password, subdomain: args.subdomain, domain },
+        // The account lives on the platform domain the user chose in question 4
+        // (args.domain); it defaults to the domain this MCP server was reached
+        // through. Every domain is a full, equal platform.
+        body: {
+          username: args.username,
+          password: args.password,
+          subdomain: args.subdomain,
+          domain: typeof args.domain === "string" && args.domain ? args.domain : domain,
+        },
         sourceIp,
       });
       if (r.status === 201 && r.data?.data?.apiKey) {
