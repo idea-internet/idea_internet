@@ -801,6 +801,44 @@ describe("full lifecycle", () => {
     expect(body).not.toContain("Manual file upload");
   });
 
+  it("serves platform pages, API hosts, and aliased subdomains", async () => {
+    // Platform pages respond on every alias host.
+    for (const host of ["27c-site.ccwu.cc", "prourl.ccwu.cc", "idea-27c.ccwu.cc", "api.27c.site", "api.27ai.cloud"]) {
+      const res = await worker.fetch(new Request(`http://${host}/`), env, {} as ExecutionContext);
+      expect(res.status).toBe(200);
+    }
+
+    // Dedicated API hosts answer the health probe without a subdomain.
+    const health = await worker.fetch(new Request("http://api.27c.site/api/health"), env, {} as ExecutionContext);
+    expect(health.status).toBe(200);
+
+    // The MCP config on an alias folds back to the canonical domain.
+    const cfg = await worker.fetch(new Request("http://idea-27c.ccwu.cc/mcp-config"), env, {} as ExecutionContext);
+    expect((await cfg.text())).toContain("https://27ai.cloud/mcp");
+
+    // Alias subdomains share the canonical claim space.
+    const key1 = await registerUser("aliasuser", "aliassite");
+    await postJson("/api/deploy", { files: [{ path: "index.html", content: "<h1>alias-ok</h1>" }] }, key1);
+    const mirror1 = await worker.fetch(new Request("http://aliassite.27c-site.ccwu.cc/"), env, {} as ExecutionContext);
+    expect((await mirror1.text())).toContain("alias-ok");
+    const mirror2 = await worker.fetch(new Request("http://aliassite.prourl.ccwu.cc/"), env, {} as ExecutionContext);
+    expect((await mirror2.text())).toContain("alias-ok");
+
+    // A claim made on 27ai.cloud resolves through its own mirror.
+    const reg = await postJson("/api/register", { username: "aliascloud", password: "testpass123", subdomain: "aliascloud", domain: "27ai.cloud" });
+    expect(reg.status).toBe(201);
+    const key2 = ((await reg.json()) as { data: { apiKey: string } }).data.apiKey;
+    await getJson("/api/skill", key2);
+    await postJson("/api/deploy", { files: [{ path: "index.html", content: "<h1>cloud-ok</h1>" }] }, key2);
+    const mirror3 = await worker.fetch(new Request("http://aliascloud.idea-27c.ccwu.cc/"), env, {} as ExecutionContext);
+    expect((await mirror3.text())).toContain("cloud-ok");
+
+    // Domain exclusivity still holds across mirrors: a 27c.site claim does not
+    // resolve through the 27ai.cloud mirror.
+    const cross = await worker.fetch(new Request("http://aliassite.idea-27c.ccwu.cc/"), env, {} as ExecutionContext);
+    expect(cross.status).toBe(404);
+  });
+
   it("reports real cumulative user stats on the public /api/stats endpoint", async () => {
     __resetStatsCacheForTests();
     const res = await fetchApi("/api/stats");

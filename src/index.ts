@@ -1,4 +1,4 @@
-import { Env } from "./types";
+import { Env, type PlatformDomain } from "./types";
 import { handleApiRequest } from "./routes/api";
 import { handleSite } from "./routes/site";
 import { handlePages } from "./pages";
@@ -39,6 +39,32 @@ const PLATFORM_HOSTS = new Set([
   "27c-site.violet27chen.workers.dev",
 ]);
 
+// Alias hosts → canonical platform domain. An alias serves EXACTLY the same
+// content as its canonical domain: platform pages, the API, and the MCP server
+// all respond identically, and <sub>.<alias> resolves the subdomain claim made
+// on the canonical domain (see platformDomainOf in routes/site.ts). Aliases
+// exist for reachability — ccwu.cc mirrors work where the primary domains may
+// be blocked, and the api.* hosts are dedicated machine entrypoints.
+const DOMAIN_ALIASES: Record<string, PlatformDomain> = {
+  "27c-site.ccwu.cc": "27c.site",
+  "api.27c-site.ccwu.cc": "27c.site",
+  "prourl.ccwu.cc": "27c.site",
+  "api.prourl.ccwu.cc": "27c.site",
+  "api.27c.site": "27c.site",
+  "idea-27c.ccwu.cc": "27ai.cloud",
+  "api.idea-27c.ccwu.cc": "27ai.cloud",
+  "api.27ai.cloud": "27ai.cloud",
+};
+
+for (const alias of Object.keys(DOMAIN_ALIASES)) PLATFORM_HOSTS.add(alias);
+
+/** Canonical platform domain for any host (aliases fold into their target). */
+function canonicalDomainOf(hostname: string): PlatformDomain {
+  const alias = DOMAIN_ALIASES[hostname];
+  if (alias) return alias;
+  return hostname.endsWith("27ai.cloud") ? "27ai.cloud" : "27c.site";
+}
+
 async function route(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
   const hostname = url.hostname.replace(/:\d+$/, "");
@@ -64,7 +90,7 @@ async function route(request: Request, env: Env, _ctx: ExecutionContext): Promis
   // that any external AI agent can read with a plain GET (no WebMCP runtime or
   // browser required). Served on every host, unauthenticated.
   if (pathname === "/agent-prompt" || pathname === "/agent-prompt.txt") {
-    const domain = hostname.endsWith("27ai.cloud") ? "27ai.cloud" : "27c.site";
+    const domain = canonicalDomainOf(hostname);
     const language = url.searchParams.get("language") === "zh" ? "zh" : "en";
     return new Response(getAgentPrompt(undefined, domain, language), {
       headers: {
@@ -85,7 +111,7 @@ async function route(request: Request, env: Env, _ctx: ExecutionContext): Promis
     }
     // Machine-readable MCP client config (domain-aware url) for easy copy/paste.
     if (pathname === "/mcp-config" || pathname === "/mcp-config.json") {
-      const domain = hostname.endsWith("27ai.cloud") ? "27ai.cloud" : "27c.site";
+      const domain = canonicalDomainOf(hostname);
       const cfg = { mcpServers: { "27c-site": { url: "https://" + domain + "/mcp" } } };
       return new Response(JSON.stringify(cfg, null, 2), {
         headers: {
@@ -113,11 +139,16 @@ async function route(request: Request, env: Env, _ctx: ExecutionContext): Promis
     return handlePages(request);
   }
 
-  const isSubdomainHost = hostname.endsWith(".27c.site") || hostname.endsWith(".27ai.cloud");
+  // User-site subdomains: <sub> on a canonical domain, or on any alias of it.
+  const SUBDOMAIN_SUFFIXES = [
+    ".27c.site",
+    ".27ai.cloud",
+    ".27c-site.ccwu.cc",
+    ".prourl.ccwu.cc",
+    ".idea-27c.ccwu.cc",
+  ];
+  const isSubdomainHost = SUBDOMAIN_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
   const subdomain = hostname.split(".")[0];
-  if (subdomain === "api" && isSubdomainHost) {
-    return handleApiRequest(env, request);
-  }
   if (subdomain && isSubdomainHost) {
     return handleSite(env, request);
   }

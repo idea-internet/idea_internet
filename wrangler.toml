@@ -18,3 +18,25 @@ bucket_name = "27c-site-assets"
 
 [dev]
 port = 8788
+
+# Custom domains (production). Mirrors the dashboard config — aliases map to
+# canonical platform domains in code (see DOMAIN_ALIASES in src/index.ts).
+# Wildcard certs for *.27c.site / *.27ai.cloud require Advanced Certificate Mgr.
+routes = [
+  { pattern = "27c.site", custom_domain = true },
+  { pattern = "*.27c.site", custom_domain = true },
+  { pattern = "api.27c.site", custom_domain = true },
+  { pattern = "27ai.cloud", custom_domain = true },
+  { pattern = "*.27ai.cloud", custom_domain = true },
+  { pattern = "api.27ai.cloud", custom_domain = true },
+  { pattern = "27c-site.ccwu.cc", custom_domain = true },
+  { pattern = "*.27c-site.ccwu.cc", custom_domain = true },
+  { pattern = "api.27c-site.ccwu.cc", custom_domain = true },
+  { pattern = "idea-27c.ccwu.cc", custom_domain = true },
+  { pattern = "*.idea-27c.ccwu.cc", custom_domain = true },
+  { pattern = "api.idea-27c.ccwu.cc", custom_domain = true },
+  { pattern = "prourl.ccwu.cc", custom_domain = true },
+  { pattern = "*.prourl.ccwu.cc", custom_domain = true },
+  { pattern = "api.prourl.ccwu.cc", custom_domain = true },
+]
+workers_dev = true
