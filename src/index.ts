@@ -83,7 +83,9 @@ async function route(request: Request, env: Env, _ctx: ExecutionContext): Promis
     return new Response(getAgentPrompt(undefined, domain, language), {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
+        // Short TTL: this instruction set is iterated frequently, and agents
+        // must pick up the current version within a minute, not an hour.
+        "Cache-Control": "public, max-age=60",
         "Access-Control-Allow-Origin": "*",
         "X-Content-Type-Options": "nosniff",
       },
