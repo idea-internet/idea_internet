@@ -1,4 +1,4 @@
-import { Env, ApiResponse, User, ApiKey, Deployment, normalizeDomain, type PlatformDomain } from "../types";
+import { Env, ApiResponse, User, ApiKey, Deployment, normalizeDomain, PLATFORM_DOMAINS, type PlatformDomain } from "../types";
 import { getUser, createUser, updateUser, getApiKeys, createApiKey, deleteApiKey, getDeployments, createDeployment, putSiteFile, subdomainExists, getUserById, createDeploymentSnapshot, pruneOldDeployments, getDeploymentSnapshot, listSiteFiles, listSiteFilesMeta, deleteSiteFiles, getSubdomainOwner, deleteUserData, releaseSubdomain, type SnapshotItemToStore } from "../db";
 import { hashPassword, verifyPassword, generateApiKey, generateId, generateDeploymentId, isReservedSubdomain, sanitizeSubdomain, isValidSubdomain, isValidPath, getContentType } from "../auth";
 import { checkRateLimit, getClientIp, RATE_LIMITS } from "../ratelimit";
@@ -464,12 +464,9 @@ async function handleChangeDomain(env: Env, userId: string, body: Record<string,
     return jsonResponse({ success: false, error: "User not found" }, 404);
   }
   const currentDomain = normalizeDomain(user.domain);
-  if (currentDomain !== "27c.site" && currentDomain !== "27ai.cloud") {
-    return jsonResponse({ success: false, error: "This platform domain is standalone and cannot be switched." }, 400);
-  }
   const requested = typeof body.domain === "string" ? body.domain.trim().toLowerCase() : "";
-  if (requested !== "27c.site" && requested !== "27ai.cloud") {
-    return jsonResponse({ success: false, error: "Invalid domain. Use 27c.site or 27ai.cloud." }, 400);
+  if (!(PLATFORM_DOMAINS as readonly string[]).includes(requested)) {
+    return jsonResponse({ success: false, error: "Invalid domain. Choose one of: " + PLATFORM_DOMAINS.join(", ") + "." }, 400);
   }
   if (requested === currentDomain) {
     return jsonResponse({ success: false, error: "This is already your current domain." }, 400);
