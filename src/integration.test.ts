@@ -801,9 +801,12 @@ describe("full lifecycle", () => {
     expect(body).not.toContain("Manual file upload");
   });
 
-  it("serves platform pages, API hosts, and aliased subdomains", async () => {
-    // Platform pages respond on every alias host.
-    for (const host of ["27c-site.ccwu.cc", "prourl.ccwu.cc", "idea-27c.ccwu.cc", "api.27c.site", "api.27ai.cloud"]) {
+  it("serves all five platform domains as independent platforms", async () => {
+    // Platform pages respond on every platform domain root and its api.* host.
+    for (const host of [
+      "27c.site", "27ai.cloud", "27c-site.ccwu.cc", "idea-27c.ccwu.cc", "prourl.ccwu.cc",
+      "api.27c.site", "api.27ai.cloud", "api.27c-site.ccwu.cc", "api.idea-27c.ccwu.cc", "api.prourl.ccwu.cc",
+    ]) {
       const res = await worker.fetch(new Request(`http://${host}/`), env, {} as ExecutionContext);
       expect(res.status).toBe(200);
     }
@@ -812,31 +815,40 @@ describe("full lifecycle", () => {
     const health = await worker.fetch(new Request("http://api.27c.site/api/health"), env, {} as ExecutionContext);
     expect(health.status).toBe(200);
 
-    // The MCP config on an alias folds back to the canonical domain.
-    const cfg = await worker.fetch(new Request("http://idea-27c.ccwu.cc/mcp-config"), env, {} as ExecutionContext);
-    expect((await cfg.text())).toContain("https://27ai.cloud/mcp");
+    // Each platform domain's MCP config points at ITS OWN domain, never a sibling.
+    for (const [host, expected] of [
+      ["27c.site", "27c.site/mcp"],
+      ["27ai.cloud", "27ai.cloud/mcp"],
+      ["27c-site.ccwu.cc", "27c-site.ccwu.cc/mcp"],
+      ["idea-27c.ccwu.cc", "idea-27c.ccwu.cc/mcp"],
+      ["prourl.ccwu.cc", "prourl.ccwu.cc/mcp"],
+    ] as const) {
+      const cfg = await worker.fetch(new Request(`http://${host}/mcp-config`), env, {} as ExecutionContext);
+      expect((await cfg.text())).toContain(expected);
+    }
 
-    // Alias subdomains share the canonical claim space.
-    const key1 = await registerUser("aliasuser", "aliassite");
-    await postJson("/api/deploy", { files: [{ path: "index.html", content: "<h1>alias-ok</h1>" }] }, key1);
-    const mirror1 = await worker.fetch(new Request("http://aliassite.27c-site.ccwu.cc/"), env, {} as ExecutionContext);
-    expect((await mirror1.text())).toContain("alias-ok");
-    const mirror2 = await worker.fetch(new Request("http://aliassite.prourl.ccwu.cc/"), env, {} as ExecutionContext);
-    expect((await mirror2.text())).toContain("alias-ok");
+    // A subdomain claimed on 27c.site resolves there, but NOT on any other
+    // platform domain — each domain is its own independent namespace.
+    const key1 = await registerUser("induser1", "indsite1");
+    await postJson("/api/deploy", { files: [{ path: "index.html", content: "<h1>ind-ok</h1>" }] }, key1);
+    expect((await (await worker.fetch(new Request("http://indsite1.27c.site/"), env, {} as ExecutionContext)).text())).toContain("ind-ok");
+    expect((await worker.fetch(new Request("http://indsite1.27c-site.ccwu.cc/"), env, {} as ExecutionContext)).status).toBe(404);
+    expect((await worker.fetch(new Request("http://indsite1.prourl.ccwu.cc/"), env, {} as ExecutionContext)).status).toBe(404);
+    expect((await worker.fetch(new Request("http://indsite1.idea-27c.ccwu.cc/"), env, {} as ExecutionContext)).status).toBe(404);
 
-    // A claim made on 27ai.cloud resolves through its own mirror.
-    const reg = await postJson("/api/register", { username: "aliascloud", password: "testpass123", subdomain: "aliascloud", domain: "27ai.cloud" });
+    // A subdomain claimed on prourl.ccwu.cc resolves only there — even the same
+    // subdomain name on 27c.site is a different, empty namespace.
+    const reg = await postJson("/api/register", { username: "induser2", password: "testpass123", subdomain: "indsite2", domain: "prourl.ccwu.cc" });
     expect(reg.status).toBe(201);
     const key2 = ((await reg.json()) as { data: { apiKey: string } }).data.apiKey;
     await getJson("/api/skill", key2);
-    await postJson("/api/deploy", { files: [{ path: "index.html", content: "<h1>cloud-ok</h1>" }] }, key2);
-    const mirror3 = await worker.fetch(new Request("http://aliascloud.idea-27c.ccwu.cc/"), env, {} as ExecutionContext);
-    expect((await mirror3.text())).toContain("cloud-ok");
+    await postJson("/api/deploy", { files: [{ path: "index.html", content: "<h1>prourl-ok</h1>" }] }, key2);
+    expect((await (await worker.fetch(new Request("http://indsite2.prourl.ccwu.cc/"), env, {} as ExecutionContext)).text())).toContain("prourl-ok");
+    expect((await worker.fetch(new Request("http://indsite2.27c.site/"), env, {} as ExecutionContext)).status).toBe(404);
 
-    // Domain exclusivity still holds across mirrors: a 27c.site claim does not
-    // resolve through the 27ai.cloud mirror.
-    const cross = await worker.fetch(new Request("http://aliassite.idea-27c.ccwu.cc/"), env, {} as ExecutionContext);
-    expect(cross.status).toBe(404);
+    // The agent prompt on a standalone ccwu.cc domain names that domain, not 27c.site.
+    const prompt = await worker.fetch(new Request("http://prourl.ccwu.cc/agent-prompt"), env, {} as ExecutionContext);
+    expect((await prompt.text())).toContain("prourl.ccwu.cc");
   });
 
   it("reports real cumulative user stats on the public /api/stats endpoint", async () => {

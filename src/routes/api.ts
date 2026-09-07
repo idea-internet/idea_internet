@@ -139,7 +139,7 @@ async function handleRegister(env: Env, body: Record<string, unknown>): Promise<
   };
   await createApiKey(env, apiKeyRecord);
 
-  return jsonResponse({ success: true, data: { username: user.username, subdomain: user.subdomain, apiKey: newKey } }, 201);
+  return jsonResponse({ success: true, data: { username: user.username, subdomain: user.subdomain, domain, apiKey: newKey } }, 201);
 }
 
 async function handleLogin(env: Env, body: Record<string, unknown>): Promise<Response> {
@@ -180,7 +180,7 @@ async function handleLogin(env: Env, body: Record<string, unknown>): Promise<Res
     apiKey = apiKeyRecord;
   }
 
-  return jsonResponse({ success: true, data: { username: user.username, subdomain: user.subdomain, apiKey: apiKey.key } }, 200);
+  return jsonResponse({ success: true, data: { username: user.username, subdomain: user.subdomain, domain: normalizeDomain(user.domain), apiKey: apiKey.key } }, 200);
 }
 
 async function handleListApiKeys(env: Env, userId: string): Promise<Response> {
@@ -463,11 +463,14 @@ async function handleChangeDomain(env: Env, userId: string, body: Record<string,
   if (!user) {
     return jsonResponse({ success: false, error: "User not found" }, 404);
   }
+  const currentDomain = normalizeDomain(user.domain);
+  if (currentDomain !== "27c.site" && currentDomain !== "27ai.cloud") {
+    return jsonResponse({ success: false, error: "This platform domain is standalone and cannot be switched." }, 400);
+  }
   const requested = typeof body.domain === "string" ? body.domain.trim().toLowerCase() : "";
   if (requested !== "27c.site" && requested !== "27ai.cloud") {
     return jsonResponse({ success: false, error: "Invalid domain. Use 27c.site or 27ai.cloud." }, 400);
   }
-  const currentDomain = normalizeDomain(user.domain);
   if (requested === currentDomain) {
     return jsonResponse({ success: false, error: "This is already your current domain." }, 400);
   }

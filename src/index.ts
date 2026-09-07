@@ -1,4 +1,4 @@
-import { Env, type PlatformDomain } from "./types";
+import { Env, type PlatformDomain, platformDomainOf } from "./types";
 import { handleApiRequest } from "./routes/api";
 import { handleSite } from "./routes/site";
 import { handlePages } from "./pages";
@@ -29,40 +29,28 @@ function requestId(): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-const PLATFORM_HOSTS = new Set([
-  "27c.site",
-  "www.27c.site",
-  "27ai.cloud",
-  "www.27ai.cloud",
-  "127.0.0.1",
-  "localhost",
-  "27c-site.violet27chen.workers.dev",
+// Hosts that serve the platform itself (root pages, the API, the MCP server,
+// and the agent prompt). Every platform domain has a root, a www.*, and an
+// api.* host. The three ccwu.cc domains are STANDALONE platforms — NOT aliases
+// of 27c.site/27ai.cloud — so each maps to its own platform domain.
+const PLATFORM_HOSTS = new Set<string>([
+  // 27c.site
+  "27c.site", "www.27c.site", "api.27c.site",
+  // 27ai.cloud
+  "27ai.cloud", "www.27ai.cloud", "api.27ai.cloud",
+  // 27c-site.ccwu.cc (standalone)
+  "27c-site.ccwu.cc", "api.27c-site.ccwu.cc",
+  // idea-27c.ccwu.cc (standalone)
+  "idea-27c.ccwu.cc", "api.idea-27c.ccwu.cc",
+  // prourl.ccwu.cc (standalone)
+  "prourl.ccwu.cc", "api.prourl.ccwu.cc",
+  // local dev + preview
+  "127.0.0.1", "localhost", "27c-site.violet27chen.workers.dev",
 ]);
 
-// Alias hosts → canonical platform domain. An alias serves EXACTLY the same
-// content as its canonical domain: platform pages, the API, and the MCP server
-// all respond identically, and <sub>.<alias> resolves the subdomain claim made
-// on the canonical domain (see platformDomainOf in routes/site.ts). Aliases
-// exist for reachability — ccwu.cc mirrors work where the primary domains may
-// be blocked, and the api.* hosts are dedicated machine entrypoints.
-const DOMAIN_ALIASES: Record<string, PlatformDomain> = {
-  "27c-site.ccwu.cc": "27c.site",
-  "api.27c-site.ccwu.cc": "27c.site",
-  "prourl.ccwu.cc": "27c.site",
-  "api.prourl.ccwu.cc": "27c.site",
-  "api.27c.site": "27c.site",
-  "idea-27c.ccwu.cc": "27ai.cloud",
-  "api.idea-27c.ccwu.cc": "27ai.cloud",
-  "api.27ai.cloud": "27ai.cloud",
-};
-
-for (const alias of Object.keys(DOMAIN_ALIASES)) PLATFORM_HOSTS.add(alias);
-
-/** Canonical platform domain for any host (aliases fold into their target). */
+/** Platform domain for any host — delegates to the shared 5-way resolver. */
 function canonicalDomainOf(hostname: string): PlatformDomain {
-  const alias = DOMAIN_ALIASES[hostname];
-  if (alias) return alias;
-  return hostname.endsWith("27ai.cloud") ? "27ai.cloud" : "27c.site";
+  return platformDomainOf(hostname) ?? "27c.site";
 }
 
 async function route(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
@@ -139,17 +127,11 @@ async function route(request: Request, env: Env, _ctx: ExecutionContext): Promis
     return handlePages(request);
   }
 
-  // User-site subdomains: <sub> on a canonical domain, or on any alias of it.
-  const SUBDOMAIN_SUFFIXES = [
-    ".27c.site",
-    ".27ai.cloud",
-    ".27c-site.ccwu.cc",
-    ".prourl.ccwu.cc",
-    ".idea-27c.ccwu.cc",
-  ];
-  const isSubdomainHost = SUBDOMAIN_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
-  const subdomain = hostname.split(".")[0];
-  if (subdomain && isSubdomainHost) {
+  // User-site subdomains: <sub>.<any platform domain>. Each platform domain
+  // keeps its OWN subdomain namespace, so <sub>.prourl.ccwu.cc is unrelated to
+  // <sub>.27c.site — they are independent platforms.
+  const subDomain = platformDomainOf(hostname);
+  if (subDomain && !PLATFORM_HOSTS.has(hostname)) {
     return handleSite(env, request);
   }
 

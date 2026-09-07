@@ -1,4 +1,4 @@
-import { Env, type PlatformDomain } from "../types";
+import { Env, platformDomainOf } from "../types";
 import { getSiteFile, getSubdomainOwner } from "../db";
 import { isValidPath } from "../auth";
 import { dictFor, localeFromAcceptLanguage } from "../locales";
@@ -22,19 +22,9 @@ function htmlResponse(body: string): Response {
 }
 
 /** Which platform domain does this subdomain hostname belong to? */
-// Alias subdomains share the canonical claim space: <sub>.27c-site.ccwu.cc and
-// <sub>.prourl.ccwu.cc resolve the claim made on 27c.site, <sub>.idea-27c.ccwu.cc
-// the one made on 27ai.cloud (mirror domains — see DOMAIN_ALIASES in index.ts).
-function platformDomainOf(hostname: string): PlatformDomain | null {
-  if (hostname.endsWith(".27c.site") || hostname.endsWith(".27c-site.ccwu.cc") || hostname.endsWith(".prourl.ccwu.cc")) {
-    return "27c.site";
-  }
-  if (hostname.endsWith(".27ai.cloud") || hostname.endsWith(".idea-27c.ccwu.cc")) {
-    return "27ai.cloud";
-  }
-  return null;
-}
-
+// Every platform domain keeps its OWN subdomain claim namespace (see
+// platformDomainOf in ../types) — <sub>.prourl.ccwu.cc is unrelated to
+// <sub>.27c.site; they are independent platforms.
 async function handleSiteRequest(env: Env, hostname: string, pathname: string, acceptLanguage: string | null, forcedOwnerId?: string): Promise<Response> {
   const dict = dictFor(localeFromAcceptLanguage(acceptLanguage));
 

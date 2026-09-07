@@ -10,7 +10,7 @@
 // obtained via register/login is cached per MCP session (keyed by the
 // Mcp-Session-Id header) in KV; an explicit `api_key` argument always wins.
 
-import { Env } from "./types";
+import { Env, platformDomainOf } from "./types";
 import { handleApiRequest } from "./routes/api";
 import { getTasteSkillMarkdown } from "./skills/taste-skill";
 import { getAgentPrompt } from "./agent-prompt";
@@ -142,7 +142,7 @@ const TOOLS: { name: string; description: string; inputSchema: any }[] = [
   {
     name: "change_domain",
     description:
-      "Move the site to the other platform domain (27c.site <-> 27ai.cloud). The chosen domain is EXCLUSIVE: after this, the previous <subdomain>.<domain> no longer resolves. Requires an authenticated session.",
+      "Move the site to the other platform domain (only 27c.site <-> 27ai.cloud). The chosen domain is EXCLUSIVE: after this, the previous <subdomain>.<domain> no longer resolves. Standalone domains (the ccwu.cc mirrors) cannot switch and this tool will be rejected for them. Requires an authenticated session.",
     inputSchema: {
       type: "object",
       properties: {
@@ -328,7 +328,7 @@ async function callTool(
         return ok(
           "Account created and session authenticated. The API key is stored securely in this MCP session and will not be shown.\n" +
             "This is a NEW site: you MUST call the `get_skill` tool and follow the design skill before your first deploy (deploy is blocked until you do).\n" +
-            "siteUrl: https://" + r.data.data.subdomain + ".27c.site"
+            "siteUrl: https://" + r.data.data.subdomain + "." + (r.data.data.domain || domain)
         );
       }
       return err("Register failed:\n" + fmt(r.data));
@@ -342,7 +342,7 @@ async function callTool(
         await env.SITE_STORAGE.put("mcp:session:" + sid, r.data.data.apiKey, { expirationTtl: 3600 }).catch(() => {});
         return ok(
           "Logged in. The API key is stored securely in this MCP session and will not be shown.\n" +
-            "siteUrl: https://" + r.data.data.subdomain + ".27c.site"
+            "siteUrl: https://" + r.data.data.subdomain + "." + (r.data.data.domain || domain)
         );
       }
       return err("Login failed:\n" + fmt(r.data));
@@ -580,7 +580,7 @@ export async function handleMcpRequest(env: Env, request: Request): Promise<Resp
   }
 
   const url = new URL(request.url);
-  const domain = url.hostname.endsWith("27ai.cloud") ? "27ai.cloud" : "27c.site";
+  const domain = platformDomainOf(url.hostname) ?? "27c.site";
   const sourceIp =
     request.headers.get("CF-Connecting-IP") ||
     request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() ||
