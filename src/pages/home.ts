@@ -1,5 +1,5 @@
 import type { Dict } from "../locales";
-import { A11Y_CSS, navHtml, footerHtml } from "./layout";
+import { A11Y_CSS, NAV_CSS, navHtml, footerHtml } from "./layout";
 import { getMcpInstallerPrompt } from "../agent-prompt";
 import { EXAMPLE_PROMPTS } from "../example-prompts";
 
@@ -144,33 +144,7 @@ export function renderHome(d: Dict): string {
       line-height: 1.6;
       min-height: 100vh;
     }
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 2rem;
-      border-bottom: 1px solid var(--border);
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--accent);
-      text-decoration: none;
-    }
-    .logo span { color: var(--text); }
-    .nav-links, nav > div { display: flex; gap: 1.5rem; align-items: center; }
-    nav a.nav-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    nav a.nav-link:hover { color: var(--text); }
-    nav a.lang-toggle { color: var(--accent); }
+    ${NAV_CSS}
     .hero {
       position: relative;
       max-width: 1200px;
@@ -457,15 +431,12 @@ export function renderHome(d: Dict): string {
       .example-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
-      nav { padding: 1rem 1.5rem; }
       section { padding: 3rem 1.5rem; }
       .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .feature:nth-child(n) { grid-column: span 1; }
       .compare th, .compare td { padding: 0.625rem 0.75rem; font-size: 0.875rem; }
     }
     @media (max-width: 520px) {
-      nav > div { gap: 0.75rem; }
-      nav a.nav-link { font-size: 0.8125rem; }
       .hero h1 { font-size: 2.25rem; }
       .hero p { font-size: 1rem; }
       .cta-group { flex-direction: column; }

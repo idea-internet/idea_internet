@@ -1,5 +1,5 @@
 import type { Dict } from "../locales";
-import { A11Y_CSS, navHtml, footerHtml } from "./layout";
+import { A11Y_CSS, NAV_CSS, navHtml, footerHtml } from "./layout";
 
 export interface PolicyContent {
   path: string;
@@ -90,20 +90,10 @@ export function renderPolicy(d: Dict, c: PolicyContent): string {
       color: var(--text);
       line-height: 1.7;
     }
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 2rem;
-      border-bottom: 1px solid var(--border);
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    nav .logo { font-weight: 700; font-size: 1.125rem; color: var(--text); text-decoration: none; }
+    ${NAV_CSS}
+    nav { max-width: 900px; }
+    nav .logo { font-size: 1.125rem; color: var(--text); }
     nav .logo span { color: var(--accent); }
-    nav a.nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.875rem; margin-left: 1.25rem; }
-    nav a.nav-link:hover { color: var(--accent); }
-    nav a.lang-toggle { color: var(--accent); }
     main { max-width: 820px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
     h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
     .updated { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; }

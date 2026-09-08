@@ -1,5 +1,5 @@
 import type { Dict } from "../locales";
-import { navHtml, footerHtml } from "./layout";
+import { NAV_CSS, navHtml, footerHtml } from "./layout";
 
 export function renderDocs(d: Dict): string {
   const toolList = d.docs.opt1.tools.map((t) => `<li>${t}</li>`).join("\n      ");
@@ -77,20 +77,10 @@ export function renderDocs(d: Dict): string {
       color: var(--text);
       line-height: 1.7;
     }
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 2rem;
-      border-bottom: 1px solid var(--border);
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    nav .logo { font-weight: 700; font-size: 1.125rem; color: var(--text); text-decoration: none; }
+    ${NAV_CSS}
+    nav { max-width: 900px; }
+    nav .logo { font-size: 1.125rem; color: var(--text); }
     nav .logo span { color: var(--accent); }
-    nav a.nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.875rem; margin-left: 1.25rem; }
-    nav a.nav-link:hover { color: var(--accent); }
-    nav a.lang-toggle { color: var(--accent); }
     main { max-width: 820px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
     h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
     h2 { font-size: 1.375rem; font-weight: 700; margin: 2.75rem 0 0.75rem; }
@@ -138,7 +128,6 @@ export function renderDocs(d: Dict): string {
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
     @media (max-width: 768px) {
-      nav { padding: 1rem 1.5rem; }
       main { padding: 2rem 1.25rem 3rem; }
       th, td { padding: 0.625rem 0.75rem; font-size: 0.875rem; }
     }
